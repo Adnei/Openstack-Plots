@@ -11,35 +11,35 @@ objects.get_plot_infos <- function(image){
     fedora31={
       return (
         list(
-          title = 'Linha do tempo: GNU/Linux Fedora Cloud 31-1.9',
+          title = 'Timeline: GNU/Linux Fedora Cloud 31-1.9',
           pdf = 'fedoraTimeLine.pdf'
         )
       )
     },focal_ubuntu={
       return (
         list(
-          title = 'Linha do tempo: GNU/Linux Ubuntu Server 20.04 (Focal Fossa)',
+          title = 'Timeline: GNU/Linux Ubuntu Server 20.04 (Focal Fossa)',
           pdf = 'ubuntuFocalTimeLine.pdf'
         )
       )
     },bionic_ubuntu={
       return (
         list(
-          title = 'Linha do tempo: GNU/Linux Ubuntu Server 18.04 (Bionic Beaver)',
+          title = 'Timeline: GNU/Linux Ubuntu Server 18.04 (Bionic Beaver)',
           pdf = 'ubuntuBionicTimeLine.pdf'
         )
       )
     },centos7_light={
       return (
         list(
-          title = 'Linha do tempo: Centos7',
+          title = 'Timeline: Centos7',
           pdf = 'centosLightTimeLine.pdf'
         )
       )
     },cirros={
       return (
         list(
-          title = 'Linha do tempo: CirrOS 0.4.0',
+          title = 'Timeline: CirrOS 0.4.0',
           pdf = 'cirrosTimeLine.pdf'
         )
       )

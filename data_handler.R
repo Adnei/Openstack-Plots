@@ -1,6 +1,7 @@
 data_handler.groupPackets <- function(data, step=1, from=0, to=ceiling(max(data$ts) - min(data$ts))){
   axis.x <- seq(from,to, by=step)
   sum_by_sec <- c()
+  reference_time <- min(data$ts)
 
   # This is not so pretty... should try and not use for...
   # Appending to a vector may be slow
