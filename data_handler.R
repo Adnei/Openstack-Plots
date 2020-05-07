@@ -19,3 +19,36 @@ data_handler.groupPackets <- function(data, step=1, from=0, to=ceiling(max(data$
 
   return (data.frame(x=axis.x, y=sum_by_sec))
 }
+
+
+
+##################################################################################
+# ATTENTION! This function is slow and causes a lot of huge copies from memory   #
+##################################################################################
+data_handler.fill_final_schema_traffic_by_second <- function(schema){
+  final_schema <- schema
+  start_x <- 0
+  y_max <- 0
+  x_max <- 0
+  op_idx <- 1
+  final_schema$timeline <- list()
+  ## It will get data from a random execution from the execution list
+  exec_id <- sample(final_schema$executions_id_list, 1)
+  for(operation in final_schema$operations){
+      final_schema$timeline[[operation]] <- list()
+      traffic_info <- db_interact.get_traffic_info(final_schema$image_name, operation, exec_id)
+      traffic_by_second <- data_handler.groupPackets(traffic_info)
+      final_schema$timeline[[operation]]$second <- traffic_by_second$x + start_x
+      final_schema$timeline[[operation]]$traffic <- traffic_by_second$y
+      y_max <- max(c(y_max, final_schema$timeline[[operation]]$traffic))
+      x_max <- max(c(x_max, final_schema$timeline[[operation]]$second))
+      start_x <- max(final_schema$timeline[[operation]]$second) + 1
+      op_idx <- op_idx + 1
+  }
+
+  final_schema$timeline$y_max <- y_max
+  final_schema$timeline$x_max <- x_max
+
+  return(final_schema)
+
+}
