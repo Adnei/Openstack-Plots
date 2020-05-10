@@ -33,10 +33,10 @@ data_handler.fill_final_schema_traffic_by_second <- function(schema){
   op_idx <- 1
   final_schema$timeline <- list()
   ## It will get data from a random execution from the execution list
-  exec_id <- sample(final_schema$executions_id_list, 1)
+  final_schema$sample_exec_id <- sample(final_schema$executions_id_list, 1)
   for(operation in final_schema$operations){
       final_schema$timeline[[operation]] <- list()
-      traffic_info <- db_interact.get_traffic_info(final_schema$image_name, operation, exec_id)
+      traffic_info <- db_interact.get_traffic_info(final_schema$image_name, operation, final_schema$sample_exec_id)
       traffic_by_second <- data_handler.groupPackets(traffic_info)
       final_schema$timeline[[operation]]$second <- traffic_by_second$x + start_x
       final_schema$timeline[[operation]]$traffic <- traffic_by_second$y

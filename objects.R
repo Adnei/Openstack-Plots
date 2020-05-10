@@ -1,4 +1,5 @@
 source('db_interact.R')
+library(reshape2)
 
 #STATIC CONST
 objects.images <- db_interact.get_images()
@@ -74,4 +75,24 @@ objects.build_schema <- function(){
     count <- count +1
   }
   return(schema)
+}
+
+objects.build_api_calls_df <- function(os_image, operation_list, service_list, exec_id){
+  elements_counter <- 1
+  redundant_data <- data.frame(
+                    service=vector(length=length(service_list) * length(operation_list)),
+                    operation=vector(length=length(service_list) * length(operation_list)),
+                    calls=vector(length=length(service_list) * length(operation_list))
+                  )
+  for(service in service_list){
+    for(operation in operation_list){
+      redundant_data$service[elements_counter] <- service
+      redundant_data$operation[elements_counter] <- operation
+      redundant_data$calls[elements_counter] <- db_interact.get_api_calls_counter(os_image, operation, service, exec_id)
+      elements_counter <- elements_counter + 1
+    }
+  }
+  
+  result_set <- dcast(redundant_data, operation~service, fun.aggregate=sum)
+  return(result_set)
 }

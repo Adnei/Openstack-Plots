@@ -1,6 +1,9 @@
 [
   {
-    "files": "**/*.py",
-    "command": "python3.6 ${srcFile}"
+    "files": "**/*.R",
+    "command": "Rscript ${srcFile}"
+  },{
+    "files":"**/*.Rmd",
+    "command": "Rscript rmd-render.R"
   }
 ]

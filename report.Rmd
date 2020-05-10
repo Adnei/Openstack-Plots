@@ -1,0 +1,61 @@
+---
+title: "OpenStack Management Network Traffic Report"
+author: Adnei W. Donatti
+date: May 09, 2020
+output:
+  pdf_document:
+    fig_caption: true
+    keep_tex: true
+    latex_engine: pdflatex
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+---
+
+
+```{r include = FALSE}
+source('main.R')
+library(knitr)
+library(kableExtra)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+
+  for(experiment in traffic_by_second_schemas){
+    cat("\\pagebreak")
+    plots.plot_schema(experiment, label_pos, col_arr, is_pdf=FALSE)
+    op_duration <- data.frame(operation=experiment$operations, duration=vector(length=length(experiment$operations)))
+    op_counter <- 1
+    for(operation in experiment$operations){
+        op_duration$duration[op_counter] <- max(experiment$timeline[[operation]]$second) - min(experiment$timeline[[operation]]$second)
+        op_counter <- op_counter + 1
+    }
+    op_duration_table <- kable(op_duration, format="latex", caption="Duration (seconds)")
+    print(op_duration_table)
+
+    api_calls <- objects.build_api_calls_df(experiment$image_name,
+      experiment$operations,
+      objects.services,
+      experiment$sample_exec_id
+    )
+
+    api_table <- kable(api_calls, format="latex", caption="Api Calls")
+    print(api_table)
+
+  }
+
+```

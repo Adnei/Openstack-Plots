@@ -1,7 +1,7 @@
 library(RSQLite)
+sqlite <- dbDriver('SQLite')
 
 db_interact.simple_get <- function(query, params=list(), as_vector=FALSE){
-  sqlite <- dbDriver('SQLite')
   db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
   on.exit(dbDisconnect(db_conn))
   result_set <- dbSendQuery(db_conn, query)
@@ -48,7 +48,7 @@ db_interact.get_traffic_info <- function(image_name, operation, execution_id){
   params <- list(image_name = image_name,
     operation = operation,
     execution_id = execution_id)
-  sqlite <- dbDriver('SQLite')
+
   db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
   on.exit(dbDisconnect(db_conn))
 
@@ -82,4 +82,40 @@ db_interact.get_traffic_info <- function(image_name, operation, execution_id){
   fetch_result$MB <- fetch_result$MB/1000000
 
   return(fetch_result)
+}
+
+
+
+db_interact.get_api_calls_counter <- function(image_name, operation, service, execution_id){
+  params <- list(image_name = image_name,
+    operation = operation,
+    execution_id = execution_id,
+    service = service)
+
+    db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
+    on.exit(dbDisconnect(db_conn))
+
+    default_query <- "
+      SELECT count(ri.user_agent) as calls
+
+      FROM OsImage img
+      JOIN Execution ex ON img.image_id = ex.image_id
+      JOIN Operation op ON ex.exec_id = op.exec_id
+      JOIN Metering met ON op.operation_id = met.operation_id
+      JOIN PacketInfo pkt ON met.metering_id = pkt.metering_id
+      JOIN RequestInfo ri ON pkt.packet_id = ri.packet_id
+      JOIN Service sv ON ri.server_id = sv.service_id
+
+      WHERE ex.exec_id = :execution_id
+      AND op.type = :operation
+      AND img.image_name = :image_name
+      AND sv.service_name = :service
+    "
+
+    result_set <- dbSendQuery(db_conn, default_query)
+    dbBind(result_set, params)
+    fetch_result <- dbFetch(result_set)
+    dbClearResult(result_set)
+
+    return(as.numeric(fetch_result$calls))
 }
