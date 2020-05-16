@@ -1,8 +1,10 @@
 library(RSQLite)
 sqlite <- dbDriver('SQLite')
 
+DEFAULT_DATABASE <- '/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db'
+
 db_interact.simple_get <- function(query, params=list(), as_vector=FALSE){
-  db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
+  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
   on.exit(dbDisconnect(db_conn))
   result_set <- dbSendQuery(db_conn, query)
   if(length(params)){
@@ -49,7 +51,7 @@ db_interact.get_traffic_info <- function(image_name, operation, execution_id){
     operation = operation,
     execution_id = execution_id)
 
-  db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
+  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
   on.exit(dbDisconnect(db_conn))
 
   default_query <- "
@@ -92,7 +94,7 @@ db_interact.get_api_calls_counter <- function(image_name, operation, service, ex
     execution_id = execution_id,
     service = service)
 
-    db_conn <- dbConnect(sqlite, dbname='/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db')
+    db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
     on.exit(dbDisconnect(db_conn))
 
     default_query <- "
@@ -118,4 +120,48 @@ db_interact.get_api_calls_counter <- function(image_name, operation, service, ex
     dbClearResult(result_set)
 
     return(as.numeric(fetch_result$calls))
+}
+
+
+db_interact.get_total_traffic <- function(image_name, operation, service, execution_id){
+  service_cond <- 'AND sv.service_name = :service'
+  params <- list(image_name = image_name,
+    operation = operation,
+    execution_id = execution_id,
+    service = service)
+
+  if( (service == 'MISC') || (is.null(service)) ){
+    service_cond <- 'AND sv.service_name IS NULL'
+    params <- list(image_name = image_name,
+      operation = operation,
+      execution_id = execution_id)
+  }
+
+  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
+  on.exit(dbDisconnect(db_conn))
+
+  total_traffic_query <- "
+    SELECT  sum(pkt.size_bytes) as traffic
+
+    FROM OsImage img
+    JOIN Execution ex ON img.image_id = ex.image_id
+    JOIN Operation op ON ex.exec_id = op.exec_id
+    JOIN Metering met ON op.operation_id = met.operation_id
+    JOIN PacketInfo pkt ON met.metering_id = pkt.metering_id
+    LEFT JOIN Service sv ON pkt.service_id = sv.service_id
+
+    WHERE ex.exec_id = :execution_id
+    AND op.type = :operation
+    AND img.image_name = :image_name
+  "
+  total_traffic_query <- paste(total_traffic_query, service_cond)
+
+  result_set <- dbSendQuery(db_conn, total_traffic_query)
+  dbBind(result_set, params)
+  fetch_result <- dbFetch(result_set)
+  dbClearResult(result_set)
+
+  return(as.numeric(fetch_result$traffic/1000000)) #Returns in MB
+
+
 }

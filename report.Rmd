@@ -1,7 +1,7 @@
 ---
 title: "OpenStack Management Network Traffic Report"
 author: Adnei W. Donatti
-date: May 09, 2020
+date: May 16, 2020
 output:
   pdf_document:
     fig_caption: true
@@ -14,7 +14,6 @@ header-includes:
   - \usepackage{array}
   - \usepackage{multirow}
   - \usepackage{wrapfig}
-  - \usepackage{float}
   - \usepackage{colortbl}
   - \usepackage{pdflscape}
   - \usepackage{tabu}
@@ -23,20 +22,26 @@ header-includes:
   - \usepackage[normalem]{ulem}
   - \usepackage{makecell}
   - \usepackage{xcolor}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 ---
 
-
-```{r include = FALSE}
-source('main.R')
-library(knitr)
-library(kableExtra)
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.pos = 'H')
+  source('main.R')
+  library(magrittr)
+  library(knitr)
+  library(kableExtra)
 ```
 
-```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis', fig.align="center"}
 
 
   for(experiment in traffic_by_second_schemas){
-    cat("\\pagebreak")
+    # cat("\\pagebreak")
+    cat("\n\n\\pagebreak\n")
+    writeLines(experiment$info$title)
+    #Plotting schema
     plots.plot_schema(experiment, label_pos, col_arr, is_pdf=FALSE)
     op_duration <- data.frame(operation=experiment$operations, duration=vector(length=length(experiment$operations)))
     op_counter <- 1
@@ -44,7 +49,9 @@ library(kableExtra)
         op_duration$duration[op_counter] <- max(experiment$timeline[[operation]]$second) - min(experiment$timeline[[operation]]$second)
         op_counter <- op_counter + 1
     }
-    op_duration_table <- kable(op_duration, format="latex", caption="Duration (seconds)")
+    op_duration_table <- kable(op_duration, format="latex", caption="Duration (seconds)") %>%
+    kable_styling(latex_options = "HOLD_position")
+    # Printing duration table
     print(op_duration_table)
 
     api_calls <- objects.build_api_calls_df(experiment$image_name,
@@ -52,9 +59,19 @@ library(kableExtra)
       objects.services,
       experiment$sample_exec_id
     )
-
-    api_table <- kable(api_calls, format="latex", caption="Api Calls")
+    total_traffic <- objects.build_total_traffic(experiment$image_name,
+      experiment$operations,
+      objects.services,
+      experiment$sample_exec_id
+    )
+    api_table <- kable(api_calls, format="latex", caption="Api Calls") %>%
+    kable_styling(latex_options = "HOLD_position")
+    traffic_table <- kable(total_traffic, format="latex", caption="Total Traffic (MB)") %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
+    # printing tables to latex
+    print(traffic_table)
     print(api_table)
+
 
   }
 
