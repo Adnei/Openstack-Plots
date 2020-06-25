@@ -17,22 +17,22 @@ for(schema in blank_schema_list) {
   schema_counter <- schema_counter + 1
 }
 
-# for(schema in traffic_by_second_schemas){
-#     #Plotting Timeline
-#     plots.plot_schema(schema, label_pos, col_arr, is_pdf=TRUE )
-#
-#     #Generating API Calls table
-#     api_calls <- objects.build_api_calls_df(schema$image_name,
-#       schema$operations,
-#       objects.services,
-#       schema$sample_exec_id
-#     )
-#
-#     #Generating Total Traffic per service table
-#     total_traffic <- objects.build_total_traffic(schema$image_name,
-#       schema$operations,
-#       objects.services,
-#       schema$sample_exec_id
-#     )
-#
-# }
+for(schema in traffic_by_second_schemas){
+    #Plotting Timeline
+    plots.plot_schema(schema, label_pos, col_arr, is_pdf=TRUE )
+
+    #Generating API Calls table
+    # api_calls <- objects.build_api_calls_df(schema$image_name,
+    #   schema$operations,
+    #   objects.services,
+    #   schema$sample_exec_id
+    # )
+    #
+    # #Generating Total Traffic per service table
+    # total_traffic <- objects.build_total_traffic(schema$image_name,
+    #   schema$operations,
+    #   objects.services,
+    #   schema$sample_exec_id
+    # )
+
+}

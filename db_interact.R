@@ -1,7 +1,7 @@
 library(RSQLite)
 sqlite <- dbDriver('SQLite')
 
-DEFAULT_DATABASE <- '/media/HDD/UDESC/OpenStack/OpenStack-Plots/network_metering_experiment.db'
+DEFAULT_DATABASE <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_1/network_metering_experiment.db'
 
 db_interact.simple_get <- function(query, params=list(), as_vector=FALSE){
   db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)

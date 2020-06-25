@@ -38,6 +38,13 @@ objects.get_plot_infos <- function(image){
           pdf = 'centosLightTimeLine.pdf'
         )
       )
+    },centos7={
+      return (
+        list(
+          title = 'Timeline: Centos7 (1300 MB)',
+          pdf = 'centosTimeLine.pdf'
+        )
+      )
     },cirros={
       return (
         list(
@@ -45,11 +52,32 @@ objects.get_plot_infos <- function(image){
           pdf = 'cirrosTimeLine.pdf'
         )
       )
+    },debian10raw={
+      return (
+        list(
+          title = 'Timeline: GNU/Linux Debian 10 (2000 MB)',
+          pdf = 'debian10_raw.pdf'
+        )
+      )
+    },debian10qcow2={
+      return (
+        list(
+          title = 'Timeline: GNU/Linux Debian 10 (550 MB)',
+          pdf = 'debian10_qcow2.pdf'
+        )
+      )
+    },windows_server={
+      return (
+        list(
+          title = 'Timeline: MS Windows Server2012 R2 (6600 MB)',
+          pdf = 'windows_server.pdf'
+        )
+      )
     },{
       return (
         list(
           title = 'DEFAULT PLOT',
-          pdf = 'default_plot.pdf',
+          pdf = 'default_plot.pdf'
         )
       )
     }

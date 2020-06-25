@@ -65,7 +65,7 @@ header-includes:
       experiment$sample_exec_id
     )
     api_table <- kable(api_calls, format="latex", caption="Api Calls") %>%
-    kable_styling(latex_options = "HOLD_position")
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
     traffic_table <- kable(total_traffic, format="latex", caption="Total Traffic (MB)") %>%
     kable_styling(latex_options = c("scale_down", "HOLD_position"))
     # printing tables to latex
