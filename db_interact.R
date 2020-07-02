@@ -1,10 +1,14 @@
 library(RSQLite)
 sqlite <- dbDriver('SQLite')
 
-DEFAULT_DATABASE <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_1/network_metering_experiment.db'
+COMMON_PATH <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/'
+DB_PATH <- 'fedora_bionic_30/network_metering_experiment.db'
+# database <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_1/network_metering_experiment.db'
+# database <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_2/network_metering_experiment.db'
+DEFAULT_DATABASE <- paste0(COMMON_PATH, DB_PATH)
 
-db_interact.simple_get <- function(query, params=list(), as_vector=FALSE){
-  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
+db_interact.simple_get <- function(query, params=list(), as_vector=FALSE, database=DEFAULT_DATABASE){
+  db_conn <- dbConnect(sqlite, dbname=database)
   on.exit(dbDisconnect(db_conn))
   result_set <- dbSendQuery(db_conn, query)
   if(length(params)){
@@ -21,37 +25,37 @@ db_interact.simple_get <- function(query, params=list(), as_vector=FALSE){
 }
 
 #FIXME should create 1 function with parameters to coulmn and table :)
-db_interact.get_services <- function(){
+db_interact.get_services <- function(database=DEFAULT_DATABASE){
   service_query <- "SELECT service_name FROM Service"
-  return(db_interact.simple_get(service_query, as_vector=TRUE))
+  return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_images <- function(){
+db_interact.get_images <- function(database=DEFAULT_DATABASE){
   service_query <- "SELECT image_name FROM OsImage"
-  return(db_interact.simple_get(service_query, as_vector=TRUE))
+  return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_nics <- function(){
+db_interact.get_nics <- function(database=DEFAULT_DATABASE){
   service_query <- "SELECT network_interface FROM Metering GROUP BY network_interface"
-  return(db_interact.simple_get(service_query, as_vector=TRUE))
+  return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_exec_list_by_image <- function(image){
+db_interact.get_exec_list_by_image <- function(image, database=DEFAULT_DATABASE){
   service_query <- "
         SELECT exec_id FROM Execution exec
           JOIN OsImage img ON exec.image_id = img.image_id
           WHERE image_name = ?"
-  return(db_interact.simple_get(service_query, params=list(image), as_vector=TRUE))
+  return(db_interact.simple_get(service_query, params=list(image), as_vector=TRUE, database=database))
 }
 
 
 #TODO: Refactor
-db_interact.get_traffic_info <- function(image_name, operation, execution_id){
+db_interact.get_traffic_info <- function(image_name, operation, execution_id, database=DEFAULT_DATABASE){
   params <- list(image_name = image_name,
     operation = operation,
     execution_id = execution_id)
 
-  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
+  db_conn <- dbConnect(sqlite, dbname=database)
   on.exit(dbDisconnect(db_conn))
 
   default_query <- "
@@ -88,13 +92,13 @@ db_interact.get_traffic_info <- function(image_name, operation, execution_id){
 
 
 
-db_interact.get_api_calls_counter <- function(image_name, operation, service, execution_id){
+db_interact.get_api_calls_counter <- function(image_name, operation, service, execution_id, database=DEFAULT_DATABASE){
   params <- list(image_name = image_name,
     operation = operation,
     execution_id = execution_id,
     service = service)
 
-    db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
+    db_conn <- dbConnect(sqlite, dbname=database)
     on.exit(dbDisconnect(db_conn))
 
     default_query <- "
@@ -123,21 +127,26 @@ db_interact.get_api_calls_counter <- function(image_name, operation, service, ex
 }
 
 
-db_interact.get_total_traffic <- function(image_name, operation, service, execution_id){
+db_interact.get_total_traffic <- function(image_name, operation, execution_id, service='TOTAL', database=DEFAULT_DATABASE){
   service_cond <- 'AND sv.service_name = :service'
   params <- list(image_name = image_name,
     operation = operation,
     execution_id = execution_id,
     service = service)
 
-  if( (service == 'MISC') || (is.null(service)) ){
+  if(service == 'TOTAL'){
+    params <- list(image_name = image_name,
+      operation = operation,
+      execution_id = execution_id
+    )
+  } else if( (service == 'MISC') || (is.null(service)) ){
     service_cond <- 'AND sv.service_name IS NULL'
     params <- list(image_name = image_name,
       operation = operation,
       execution_id = execution_id)
   }
 
-  db_conn <- dbConnect(sqlite, dbname=DEFAULT_DATABASE)
+  db_conn <- dbConnect(sqlite, dbname=database)
   on.exit(dbDisconnect(db_conn))
 
   total_traffic_query <- "
@@ -154,8 +163,9 @@ db_interact.get_total_traffic <- function(image_name, operation, service, execut
     AND op.type = :operation
     AND img.image_name = :image_name
   "
-  total_traffic_query <- paste(total_traffic_query, service_cond)
-
+  if(service != 'TOTAL'){
+    total_traffic_query <- paste(total_traffic_query, service_cond)
+  }
   result_set <- dbSendQuery(db_conn, total_traffic_query)
   dbBind(result_set, params)
   fetch_result <- dbFetch(result_set)

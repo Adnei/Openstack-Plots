@@ -3,6 +3,12 @@ library(janitor)
 library(reshape2)
 
 #STATIC CONST
+objects.db_list <- c(
+  'fedora_bionic_30/network_metering_experiment.db',
+  'exp_windows/30_exec/network_metering_experiment.db',
+  'exp_1/network_metering_experiment.db',
+  'exp_2/network_metering_experiment.db'
+)
 objects.images <- db_interact.get_images()
 objects.services <- db_interact.get_services()
 objects.operations <- c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE')
@@ -125,7 +131,8 @@ objects.build_api_calls_df <- function(os_image, operation_list, service_list, e
   result_set <- dcast(redundant_data, operation~service, fun.aggregate=sum)
   #ordering by operation (custom order)
   result_set$operation <- ordered(result_set$operation, c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE') )
-  ordered_set <- result_set[with(result_set, order(operation, cinder, glance, heat, keystone, neutron, nova, swift)),]
+  #FIXME Should use service_list to order and not do it by hand
+  ordered_set <- result_set[with(result_set, order(operation, cinder, glance, heat, keystone, neutron, nova)),]
   return(ordered_set)
 }
 
@@ -143,7 +150,7 @@ objects.build_total_traffic <- function(os_image, operation_list, service_list, 
     for(operation in operation_list){
       redundant_data$service[elements_counter] <- service
       redundant_data$operation[elements_counter] <- operation
-      redundant_data$traffic_mb[elements_counter] <- db_interact.get_total_traffic(os_image, operation, service, exec_id)
+      redundant_data$traffic_mb[elements_counter] <- db_interact.get_total_traffic(os_image, operation, exec_id, service=service)
       elements_counter <- elements_counter + 1
     }
   }

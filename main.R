@@ -1,7 +1,17 @@
 source('plots.R')
 
+# .on-save
+# [
+#   {
+#     "files": "**/*.R",
+#     "command": "Rscript ${srcFile}"
+#   }
+# ]
+
+
 label_pos <- c(0,1,2,3,0)
-col_arr <- c('#000080', '#663300', '#267326', '#e68a00', '#cc0000')
+# col_arr <- c('#000080', '#663300', '#267326', '#e68a00', '#cc0000')
+col_arr <- c('red', 'orange', 'grey', 'blue', 'green')
 blank_schema_list <- objects.build_schema()
 traffic_by_second_schemas <- vector('list', length(blank_schema_list))
 x_max_array <- c()
