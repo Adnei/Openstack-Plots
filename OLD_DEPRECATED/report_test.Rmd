@@ -1,0 +1,50 @@
+---
+title: "OpenStack Management Network Traffic Report"
+author: Adnei W. Donatti
+date: May 27, 2020
+output:
+  pdf_document:
+    fig_caption: true
+    keep_tex: true
+    latex_engine: pdflatex
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.pos = 'H')
+  # source('linear_regression.R')
+  library(magrittr)
+  library(knitr)
+  library(kableExtra)
+  library(ggplot2)
+  library(dplyr)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis', fig.align="center"}
+    my_arr <- c(1,2,3,4)
+```
+
+
+```{r echo=FALSE, eval=TRUE, warning=FALSE, message=TRUE }
+  for(op_count in length(my_arr)){
+    print(my_arr[op_count])
+    my_arr[op_count]
+  }
+
+```

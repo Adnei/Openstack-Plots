@@ -112,7 +112,7 @@ objects.build_schema <- function(){
   return(schema)
 }
 
-objects.build_api_calls_df <- function(os_image, operation_list, service_list, exec_id){
+objects.build_api_calls_df <- function(os_image, operation_list, service_list, exec_id, database=DEFAULT_DATABASE){
   elements_counter <- 1
   redundant_data <- data.frame(
                     service=vector(length=length(service_list) * length(operation_list)),
@@ -123,7 +123,7 @@ objects.build_api_calls_df <- function(os_image, operation_list, service_list, e
     for(operation in operation_list){
       redundant_data$service[elements_counter] <- service
       redundant_data$operation[elements_counter] <- operation
-      redundant_data$calls[elements_counter] <- db_interact.get_api_calls_counter(os_image, operation, service, exec_id)
+      redundant_data$calls[elements_counter] <- db_interact.get_api_calls_counter(os_image, operation, exec_id, service=service, database=database)
       elements_counter <- elements_counter + 1
     }
   }
@@ -136,7 +136,7 @@ objects.build_api_calls_df <- function(os_image, operation_list, service_list, e
   return(ordered_set)
 }
 
-objects.build_total_traffic <- function(os_image, operation_list, service_list, exec_id){
+objects.build_total_traffic <- function(os_image, operation_list, service_list, exec_id, database=DEFAULT_DATABASE){
 
   service_list <- c(service_list, 'MISC')
   elements_counter <- 1
@@ -150,7 +150,7 @@ objects.build_total_traffic <- function(os_image, operation_list, service_list, 
     for(operation in operation_list){
       redundant_data$service[elements_counter] <- service
       redundant_data$operation[elements_counter] <- operation
-      redundant_data$traffic_mb[elements_counter] <- db_interact.get_total_traffic(os_image, operation, exec_id, service=service)
+      redundant_data$traffic_mb[elements_counter] <- db_interact.get_total_traffic(os_image, operation, exec_id, service=service, database=database)
       elements_counter <- elements_counter + 1
     }
   }

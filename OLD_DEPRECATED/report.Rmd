@@ -1,0 +1,113 @@
+---
+title: "OpenStack Management Network Traffic Report"
+author: Adnei W. Donatti
+date: May 16, 2020
+output:
+  pdf_document:
+    fig_caption: true
+    keep_tex: true
+    latex_engine: pdflatex
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.pos = 'H')
+  source('main.R')
+  source('boxplot.R')
+  library(magrittr)
+  library(knitr)
+  library(kableExtra)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis', fig.align="center"}
+
+  filter_fn <- function(element, match_title){
+    element[['info']][['title']] == match_title
+  }
+
+  cv_fn <- function(mean, sd){
+      (sd/mean)*100
+  }
+  color_arr <- c('red', 'orange', 'grey', 'blue', 'green')
+
+  for(experiment in traffic_by_second_schemas){
+    # cat("\\pagebreak")
+    cat("\n\n\\pagebreak\n")
+    writeLines(experiment$info$title)
+    #Plotting schema
+    plots.plot_schema(experiment, label_pos, col_arr, is_pdf=FALSE)
+    boxplot_obj <- boxplot.boxplot_list[unlist(lapply(boxplot.boxplot_list,filter_fn,experiment$info$title))][[1]]
+    boxplot(
+      log(boxplot_obj$CREATE$all_traffic + 1 ),
+      log(boxplot_obj$SUSPEND$all_traffic + 1 ),
+      log(boxplot_obj$RESUME$all_traffic + 1 ),
+      log(boxplot_obj$STOP$all_traffic + 1 ),
+      log(boxplot_obj$SHELVE$all_traffic + 1),
+      main = boxplot_obj$info$title,
+      names = boxplot_obj$operations,
+      labels = boxplot_obj$operations,
+      col = color_arr,
+      border = 'brown',
+      horizontal = FALSE, notch=FALSE,
+      cex.axis=0.65
+    )
+    par(cex.axis=0.65)
+    op_duration <- data.frame(operation=experiment$operations, duration=vector(length=length(experiment$operations)))
+    op_counter <- 1
+    max_time <- 0
+    for(operation in experiment$operations){
+      cv_value <- cv_fn(boxplot_obj[[operation]]$operation_mean, boxplot_obj[[operation]]$operation_sd)
+      data_set_info <- paste(
+        operation, 'SD:', boxplot_obj[[operation]]$operation_sd,
+        'MEAN:', boxplot_obj[[operation]]$operation_mean,
+        'CV:', cv_value
+      )
+      num_exec <- paste(as.character(length(experiment$executions_id_list)), 'executions')
+      writeLines(data_set_info)
+      cat("\n")
+      # writeLines(num_exec)
+      op_duration$duration[op_counter] <- max(experiment$timeline[[operation]]$second) - min(experiment$timeline[[operation]]$second)
+      op_counter <- op_counter + 1
+      max_time <- max(max_time, boxplot_obj[[operation]]$execution_time_list)
+    }
+    op_duration_table <- kable(op_duration, format="latex", caption="Duration (seconds)") %>%
+    kable_styling(latex_options = "HOLD_position")
+    # Printing duration table
+    print(op_duration_table)
+
+    api_calls <- objects.build_api_calls_df(experiment$image_name,
+      experiment$operations,
+      objects.services,
+      experiment$sample_exec_id
+    )
+    total_traffic <- objects.build_total_traffic(experiment$image_name,
+      experiment$operations,
+      objects.services,
+      experiment$sample_exec_id
+    )
+    api_table <- kable(api_calls, format="latex", caption="Api Calls") %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
+    traffic_table <- kable(total_traffic, format="latex", caption="Total Traffic (MB)") %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
+    # printing tables to latex
+    print(traffic_table)
+    print(api_table)
+  }
+
+```

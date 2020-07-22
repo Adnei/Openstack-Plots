@@ -1,0 +1,141 @@
+---
+title: "OpenStack Management Network Traffic Report"
+author: Adnei W. Donatti
+date: May 27, 2020
+output:
+  pdf_document:
+    fig_caption: true
+    keep_tex: true
+    latex_engine: pdflatex
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.pos = 'H')
+  source('boxplot_final.R')
+  library(magrittr)
+  library(knitr)
+  library(kableExtra)
+  library(ggplot2)
+  library(dplyr)
+  library(grid)
+  library(gridExtra)
+  library(reshape)
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis', fig.align="center"}
+
+  CONST_API_SERVICES <- c('nova', 'keystone', 'glance','cinder','neutron','heat')
+
+  cv_fn <- function(mean, sd){
+      (sd/mean)*100
+  }
+
+  create.df <- boxplot_data.df[boxplot_data.df$operation == 'CREATE',]
+  shelve.df <- boxplot_data.df[boxplot_data.df$operation == 'SHELVE',]
+
+  ylim_min_value <- min(c(min(log(create.df$traffic + 1)), min(log(shelve.df$traffic + 1))) )
+  ylim_max_value <- max(c(max(log(create.df$traffic + 1)), max(log(shelve.df$traffic + 1))) )
+  create_plot <- ggplot(create.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('CREATE Operation') +
+    ylab("Traffic (log10 +1 scale)") +
+    theme(legend.position="none") +
+    ylim(ylim_min_value, ylim_max_value)
+  shelve_plot <- ggplot(shelve.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('SHELVE Operation') +
+    ylim(ylim_min_value, ylim_max_value) +
+    theme(axis.text.y=element_blank(), axis.title.y=element_blank())
+  grid.newpage()
+  grid.draw(cbind(ggplotGrob(create_plot), ggplotGrob(shelve_plot), size = "last"))
+
+  data_info.df$total_api_calls_mean <- ceiling(as.numeric(data_info.df$total_api_calls_mean))
+  data_info.table <- kable(data_info.df, format="latex", caption="Data Information") %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
+  print(data_info.table)
+
+
+  for(database_path in unique(db.df$database)){
+    db_images <- unique(db.df[db.df$database == database_path,]$image)
+    #API CALLS
+    service_api_calls.df <- db_interact.get_service_calls(database=database_path)
+    service_api_calls.df <- select(service_api_calls.df, service, calls, operation, image)
+
+    api_calls_grouped.df <- group_by(service_api_calls.df, operation, service, image)
+    summarised_api_calls.df <- summarise(api_calls_grouped.df, avg_calls = ceiling(mean(calls)), sd = sd(calls))
+
+
+    #TOTAL TRAFFIC
+    service_traffic.df <- db_interact.get_service_traffic(database=database_path)
+    service_traffic.df <- select(service_traffic.df, service, traffic, operation, image)
+
+    service_traffic_grouped.df <- group_by(service_traffic.df, operation, service, image)
+    summarised_service_traffic.df <- summarise(service_traffic_grouped.df, avg_traffic = mean(traffic), sd = sd(traffic))
+
+    for(image in db_images){
+      this.summarised_api_calls.df <- summarised_api_calls.df[summarised_api_calls.df$image == image, ]
+      this.summarised_service_traffic.df <- summarised_service_traffic.df[summarised_service_traffic.df$image == image, ]
+
+      cat(image)
+      ## API
+      #MEAN
+      result_api_mean <- cast(select(this.summarised_api_calls.df, operation, service, avg_calls), operation~service, fun.aggregate = sum)
+      result_api_mean[is.na(result_api_mean)] <- 0
+      result_api_mean$operation <- ordered(result_api_mean$operation, c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE') )
+      # c('nova', 'keystone', 'glance','cinder','neutron','heat')
+      ordered_result_api_mean <- result_api_mean[with(result_api_mean, order(operation, nova, keystone, glance, neutron)),]
+      ordered_result_api_mean.table <- kable(ordered_result_api_mean, format="latex", caption="API Calls Average") %>%
+      kable_styling(latex_options = c("scale_down", "HOLD_position"))
+      print(ordered_result_api_mean.table)
+
+      # SD
+      result_api_sd <- cast(select(this.summarised_api_calls.df, operation, service, sd), operation~service, fun.aggregate = sum)
+      result_api_sd[is.na(result_api_sd)] <- 0
+      result_api_sd$operation <- ordered(result_api_sd$operation, c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE') )
+      # c('nova', 'keystone', 'glance','cinder','neutron','heat')
+      ordered_result_api_sd <- result_api_sd[with(result_api_sd, order(operation, nova, keystone, glance, neutron)),]
+      ordered_result_api_sd.table <- kable(ordered_result_api_sd, format="latex", caption="API Calls Standard Deviation") %>%
+      kable_styling(latex_options = c("scale_down", "HOLD_position"))
+      print(ordered_result_api_sd.table)
+
+      ##TRAFFIC
+      #MEAN
+      result_traffic_mean <- cast(select(this.summarised_service_traffic.df, operation, service, avg_traffic), operation~service, fun.aggregate = sum)
+      result_traffic_mean[is.na(result_traffic_mean)] <- 0
+      result_traffic_mean$operation <- ordered(result_traffic_mean$operation, c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE') )
+      # c('nova', 'keystone', 'glance','cinder','neutron','heat')
+      ordered_result_traffic_mean <- result_traffic_mean[with(result_traffic_mean, order(operation, nova, keystone, glance, neutron)),]
+      ordered_result_traffic_mean.table <- kable(ordered_result_traffic_mean, format="latex", caption="Total Traffic Average (MB)") %>%
+      kable_styling(latex_options = c("scale_down", "HOLD_position"))
+      print(ordered_result_traffic_mean.table)
+
+      #SD
+      result_traffic_sd <- cast(select(this.summarised_service_traffic.df, operation, service, sd), operation~service, fun.aggregate = sum)
+      result_traffic_sd[is.na(result_traffic_sd)] <- 0
+      result_traffic_sd$operation <- ordered(result_traffic_sd$operation, c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE') )
+      # c('nova', 'keystone', 'glance','cinder','neutron','heat')
+      ordered_result_traffic_sd <- result_traffic_sd[with(result_traffic_sd, order(operation, nova, keystone, glance, neutron)),]
+      ordered_result_traffic_sd.table <- kable(ordered_result_traffic_sd, format="latex", caption="Total Traffic Standard Deviation") %>%
+      kable_styling(latex_options = c("scale_down", "HOLD_position"))
+      print(ordered_result_traffic_sd.table)
+    }
+  }
+```

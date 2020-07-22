@@ -1,0 +1,109 @@
+---
+title: "OpenStack Management Network Traffic Report"
+author: Adnei W. Donatti
+date: May 27, 2020
+output:
+  pdf_document:
+    fig_caption: true
+    keep_tex: true
+    latex_engine: pdflatex
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.pos = 'H')
+  source('boxplot_v2.R')
+  library(magrittr)
+  library(knitr)
+  library(kableExtra)
+  library(ggplot2)
+  library(dplyr)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis', fig.align="center"}
+
+  CONST_API_SERVICES <- c('nova', 'keystone', 'glance','cinder','neutron','heat')
+
+  cv_fn <- function(mean, sd){
+      (sd/mean)*100
+  }
+
+  for(operation in objects.operations){
+    title <- paste(operation, "operation")
+    op.df <- data.df[data.df$operation == operation,]
+    traffic_boxplot <- ggplot(op.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+      geom_boxplot() +
+      ggtitle(title) +
+      ylab("Traffic (log10 +1 scale)"
+    )
+    exec_time.df <- unique(select(op.df,image,exec_time, exec_id))
+    exec_time_boxplot <- ggplot(exec_time.df, aes(x=image, y=exec_time, fill=image)) +
+      geom_boxplot() +
+      ggtitle(title) +
+      ylab("Execution Time (seconds)"
+    )
+    print(traffic_boxplot)
+    print(exec_time_boxplot)
+  }
+
+  stats_info.df <- unique(select(data.df[data.df$image %in% objects.images & data.df$operation %in% objects.operations,],
+    image, operation, op_traffic_sd, op_exec_time_sd, op_traffic_mean, op_exec_time_mean))
+  stats_info.table <- kable(stats_info.df, format="latex", caption="Data info") %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
+  print(stats_info.table)
+
+
+  for(image in objects.images){
+    writeLines(image)
+    cat("\n")
+    image.df <- data.df[data.df$image == image, ]
+    image_executions <- unique(image.df[,'exec_id'])
+    exec_sample <- sample(image_executions, 1)
+    exec_sample_label <- paste('Selected execution ID:', exec_sample)
+    writeLines(exec_sample_label)
+    cat("\n")
+    exec_times.df <- unique(select(image.df[image.df$exec_id == exec_sample,],operation,exec_time))
+    exec_times.table <- kable(exec_times.df, format="latex", caption="Duration (seconds)") %>%
+    kable_styling(latex_options = "HOLD_position")
+    # Printing duration table
+    print(exec_times.table)
+
+    api_calls <- objects.build_api_calls_df(image,
+      objects.operations,
+      intersect(objects.services, CONST_API_SERVICES),
+      exec_sample
+    )
+    total_traffic <- objects.build_total_traffic(image,
+      objects.operations,
+      objects.services,
+      exec_sample
+    )
+    api.table <- kable(api_calls, format="latex", caption="Api Calls") %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
+    traffic.table <- kable(total_traffic, format="latex", caption="Total Traffic (MB)") %>%
+    kable_styling(latex_options = c("scale_down", "HOLD_position"))
+    # printing tables to latex
+    print(traffic.table)
+    print(api.table)
+  }
+
+
+
+
+```

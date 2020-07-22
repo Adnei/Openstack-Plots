@@ -52,3 +52,8 @@ data_handler.fill_final_schema_traffic_by_second <- function(schema){
   return(final_schema)
 
 }
+
+data_handler_df_custom_order <- function(df, column, levels){
+  df[,column] <- factor(df[,column], levels=levels)
+  return(df[order(df[,column]),])
+}
