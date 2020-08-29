@@ -238,7 +238,7 @@ db_interact.get_service_traffic <- function(total=FALSE, database=DEFAULT_DATABA
   result_set <- dbSendQuery(db_conn, traffic_query)
   fetch_result <- dbFetch(result_set)
   dbClearResult(result_set)
-  fetch_result$traffic <- as.numeric(fetch_result$traffic/1000000) #Converts to MB
+  fetch_result$traffic <- as.numeric(fetch_result$traffic)/1000000 #Converts to MB
   fetch_result$exec_id <- as.numeric(fetch_result$exec_id)
   if(length(fetch_result$service) > 0 ){
     fetch_result$service <- as.character(fetch_result$service)

@@ -1,3 +1,5 @@
+# SHOULD CALL IT UTILS
+
 data_handler.groupPackets <- function(data, step=1, from=0, to=ceiling(max(data$ts) - min(data$ts))){
   axis.x <- seq(from,to, by=step)
   sum_by_sec <- c()
@@ -56,4 +58,54 @@ data_handler.fill_final_schema_traffic_by_second <- function(schema){
 data_handler_df_custom_order <- function(df, column, levels){
   df[,column] <- factor(df[,column], levels=levels)
   return(df[order(df[,column]),])
+}
+
+data_handler.df_names_fix <- function(my_df){
+  names_fix <- c(
+    function(x){
+      str_replace(x, 'fedora31', 'Fedora 31')
+    },
+
+    function(x){
+      str_replace(x, 'fedora32', 'Fedora 32')
+    },
+
+    function(x){
+      str_replace(x, 'bionic_ubuntu', 'Ubuntu Bionic Beaver')
+    },
+
+    function(x){
+      str_replace(x, 'windows_server', 'Windows Server')
+    },
+
+    function(x){
+      str_replace(x, 'centos7_light', 'Centos 7 (898 MB)')
+    },
+
+    function(x){
+      str_replace(x, 'centos7', 'Centos 7 (1300 MB)')
+    },
+
+    function(x){
+      str_replace(x, 'cirros', 'Cirros')
+    },
+
+    function(x){
+      str_replace(x, 'debian10qcow2', 'Debian 10')
+    },
+
+    function(x){
+      str_replace(x, 'focal_ubuntu', 'Ubuntu Focal Fossa')
+    },
+
+    function(x){
+      str_replace(x, 'freebsd12', 'FreeBSD 12')
+    }
+  )
+
+  for(fix.fn in names_fix){
+    my_df <- mutate_all(my_df, funs(fix.fn))
+  }
+
+  return(my_df)
 }

@@ -8,6 +8,13 @@ db_list <- c(
   'fedora_bionic_30/network_metering_experiment.db',
   'exp_windows/30_exec/network_metering_experiment.db'
 )
+# db_list <- c(
+#   'fedora_bionic_30/network_metering_experiment.db',
+#   'm1.large/fedora31_30/network_metering_experiment.db',
+#   'm1.large/bionic_ubuntu_30/network_metering_experiment.db',
+#   'exp_freebsd_30/network_metering_experiment.db',
+#   'm1.large/freebsd12_30/network_metering_experiment.db'
+# )
 
 db.df <- db_interact.filter_images_by_db(db_list)
 # exclude_images.df <- db_interact.get_excluded_images(db.df, db_list)

@@ -3,17 +3,26 @@ library(janitor)
 library(reshape2)
 
 #STATIC CONST
+# objects.db_list <- c(
+#   'fedora_bionic_30/network_metering_experiment.db',
+#   'exp_windows/30_exec/network_metering_experiment.db',
+#   'exp_1/network_metering_experiment.db',
+#   'exp_2/network_metering_experiment.db'
+# )
 objects.db_list <- c(
   'fedora_bionic_30/network_metering_experiment.db',
   'exp_windows/30_exec/network_metering_experiment.db',
   'exp_1/network_metering_experiment.db',
-  'exp_2/network_metering_experiment.db'
+  'exp_2/network_metering_experiment.db',
+  'exp_fedora32_30_2/network_metering_experiment.db',
+  'exp_freebsd_30/network_metering_experiment.db'
 )
 objects.images <- db_interact.get_images()
 objects.services <- db_interact.get_services()
 objects.operations <- c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE')
 objects.nics <- db_interact.get_nics()
 
+#@DEPRECATED
 objects.get_plot_infos <- function(image){
   switch(image,
     fedora31={
@@ -90,6 +99,7 @@ objects.get_plot_infos <- function(image){
   )
 }
 
+#@DEPRECATED
 objects.build_schema <- function(){
   #static list is the best way of adding to a list inside a loop
   #yet so, adding items to a list inside a loop is not encouraged

@@ -10,7 +10,8 @@ cv_fn <- function(mean, sd){
 get_image_size <- function(image){
   switch(image,
     fedora31={return(319)},
-    focal_ubuntu={return(508)},
+    fedora32={return(289)},
+    focal_ubuntu={return(519)},
     bionic_ubuntu={return(329)},
     centos7_light={return(898)},
     centos7={return(1300)},
@@ -21,47 +22,8 @@ get_image_size <- function(image){
     {return(NA)}) #DEFAULT
 }
 
-filter_images_by_db <- function(db_list){
-  all_images <- c()
-  exec_arr <- c()
-  db_arr <- c()
-  for(db in db_list){
-    db_path <- paste0(COMMON_PATH, db)
-    db_images <- db_interact.get_images(database=db_path)
-    n_exec <- length(db_interact.get_exec_list_by_image(db_images[1], database=db_path))
-    new_images <- db_images
-    conflict_idx <- match(db_images, all_images)
-    conflict_idx <- conflict_idx[!is.na(conflict_idx)]
-
-    if(length(conflict_idx) > 0){
-      old_n_exec <- exec_arr[c(conflict_idx)][1]
-      if(n_exec > old_n_exec){
-        db_arr[c(conflict_idx)] = db_path
-        exec_arr[c(conflict_idx)] = n_exec
-      }
-      conflict_images <- all_images[c(conflict_idx)]
-      remove_idx <- match(conflict_images, new_images)
-      remove_idx <- remove_idx[!is.na(remove_idx)]
-      new_images <- new_images[-remove_idx]
-    }
-
-    all_images <- c(all_images, new_images)
-    exec_arr <- c(exec_arr, rep(n_exec, length(new_images)))
-    db_arr <- c(db_arr, rep(db_path, length(new_images)))
-  }
-
-  if(length(db_arr) != length(exec_arr) || length(db_arr) != length(all_images)){
-    print('ERROR!')
-    print('Something went wrong during the database.dataframe (db.df) creation.')
-    return(data.frame())
-  }
-
-  db.df <- data.frame(database = db_arr, n_exec = exec_arr, image = all_images, stringsAsFactors = FALSE)
-
-  return(db.df)
-}
-
-db.df <- filter_images_by_db(objects.db_list)
+db.df <- db_interact.filter_images_by_db(objects.db_list)
+db.df <- db.df[db.df$image != 'debian10raw',]
 # lr == 'linear regression
 lr.df <- data.frame(
   image = character(length(objects.operations)*length(db.df$image)),
