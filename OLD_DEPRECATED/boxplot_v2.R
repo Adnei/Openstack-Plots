@@ -8,10 +8,10 @@ CONST_API_SERVICES <- c('nova', 'keystone', 'glance','cinder','neutron','heat')
 #@ATTENTION -> rbind causes a lot of copies of memory. It gets very, very slow for really large dfs
 #@FIXME -> Should try and pre-allocate the whole df. This will prevent R from allocating it a ton times
 
-build_traffic_info <- function(operation, exec, image, db_path){
-  traffic_by_packet <- db_interact.get_traffic_info(image, operation, exec, database=db_path)
-  total_traffic <- db_interact.get_total_traffic(image, operation, exec, service='TOTAL', database = db_path)
-  total_api_calls <- db_interact.get_api_calls_counter(image, operation, exec, service='TOTAL', database=db_path)
+build_traffic_info <- function(operation, exec, image, params.DB_PATH){
+  traffic_by_packet <- db_interact.get_traffic_info(image, operation, exec, database=params.DB_PATH)
+  total_traffic <- db_interact.get_total_traffic(image, operation, exec, service='TOTAL', database = params.DB_PATH)
+  total_api_calls <- db_interact.get_api_calls_counter(image, operation, exec, service='TOTAL', database=params.DB_PATH)
   amount_by_sec.df <- data_handler.groupPackets(traffic_by_packet)
   time <- amount_by_sec.df$x       # second
   traffic <- amount_by_sec.df$y    # MB
@@ -50,19 +50,19 @@ api_calls.df <- data.frame()
 total_traffic.df <- data.frame()
 
 for (db in db_list){
-  db_path <- paste0(COMMON_PATH, db)
+  params.DB_PATH <- paste0(params.COMMON_PATH, db)
   #FIXME It assumes there are no repeated images inside the databases
-  db_images <- db_interact.get_images(database=db_path)
-  services <- c(db_interact.get_services(database=db_path),'MISC')
+  db_images <- db_interact.get_images(database=params.DB_PATH)
+  services <- c(db_interact.get_services(database=params.DB_PATH),'MISC')
   api_services <- intersect(services, CONST_API_SERVICES)
   for(operation in objects.operations){
     for(image in db_images){
-      executions <- db_interact.get_exec_list_by_image(image, database=db_path)
+      executions <- db_interact.get_exec_list_by_image(image, database=params.DB_PATH)
       for(exec in executions){
-        exec_traffic_info.df <- build_traffic_info(operation, exec, image, db_path)
+        exec_traffic_info.df <- build_traffic_info(operation, exec, image, params.DB_PATH)
         traffic_info.df <- rbind(traffic_info.df, exec_traffic_info.df)
         #Service Traffic
-        exec_service_traffic.df <- db_interact.get_service_traffic(image, operation, database=db_path)
+        exec_service_traffic.df <- db_interact.get_service_traffic(image, operation, database=params.DB_PATH)
         no_traffic <- services[!(services %in% exec_service_traffic.df$service)]
         if (length(no_traffic) > 0){
           no_traffic_services.df <- data.frame(service=no_traffic, traffic=0)
@@ -77,7 +77,7 @@ for (db in db_list){
           s_traffic_sd = NA)
         total_traffic.df <- rbind(total_traffic.df, aux_traffic.df)
         #API Calls
-        exec_service_calls.df <- db_interact.get_service_calls(image, operation, exec, database=db_path)
+        exec_service_calls.df <- db_interact.get_service_calls(image, operation, exec, database=params.DB_PATH)
         not_called <- api_services[!(api_services %in% exec_service_calls.df$service)]
         if (length(not_called) > 0){
           not_called_services.df <- data.frame(service=not_called, calls=0)

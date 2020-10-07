@@ -4,34 +4,10 @@ source('db_interact.R')
 source('data_handler.R')
 
 CONST_API_SERVICES <- c('nova', 'keystone', 'glance','cinder','neutron','heat')
-# db_list <- c(
-#   'fedora_bionic_30/network_metering_experiment.db',
-#   'exp_windows/30_exec/network_metering_experiment.db'
-# )
-# db_list <- c(
-#   'fedora_bionic_30/network_metering_experiment.db',
-#   'm1.large/fedora31_30/network_metering_experiment.db',
-#   'm1.large/bionic_ubuntu_30/network_metering_experiment.db',
-#   'exp_freebsd_30/network_metering_experiment.db',
-#   'm1.large/freebsd12_30/network_metering_experiment.db'
-# )
-# db_list <- c(
-#   'm1.large/fedora31_30/network_metering_experiment.db',
-#   'memory_payload/m1.xlarge/_fedora31_30/network_metering_experiment.db'
-# )
 
-# db_list <- c(
-#   'm1.large/fedora31_30/network_metering_experiment.db',
-#   'memory_payload/m1.xlarge/_fedora31_30/network_metering_experiment.db',
-#   'm1.large/_fedora32_30/network_metering_experiment.db',
-#   'memory_payload/m1.xlarge/fedora32_30/network_metering_experiment.db',
-#   'm1.large/bionic_ubuntu_30/network_metering_experiment.db',
-#   'memory_payload/m1.xlarge/ubuntu_bionic_30/network_metering_experiment.db'
-# )
-
-# db.df <- db_interact.filter_images_by_db(db_list)
-db.df <- db_interact.filter_images_by_db(objects.db_list)
-db.df <- db.df[db.df$image != 'debian10raw',]
+db.df <- db_interact.filter_images_by_db(params.db_list)
+# db.df <- db.df[db.df$image != 'debian10raw',]
+db.df <- db.df[db.df$image %in% c('fedora31'), ]
 columns_len <- length(db.df$image) * length(objects.operations)
 data_info.df <- data.frame(
   image = character(columns_len),

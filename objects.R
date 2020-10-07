@@ -1,22 +1,8 @@
+source('params.R')
 source('db_interact.R')
 library(janitor)
 library(reshape2)
 
-#STATIC CONST
-# objects.db_list <- c(
-#   'fedora_bionic_30/network_metering_experiment.db',
-#   'exp_windows/30_exec/network_metering_experiment.db',
-#   'exp_1/network_metering_experiment.db',
-#   'exp_2/network_metering_experiment.db'
-# )
-objects.db_list <- c(
-  'fedora_bionic_30/network_metering_experiment.db',
-  'exp_windows/30_exec/network_metering_experiment.db',
-  'exp_1/network_metering_experiment.db',
-  'exp_2/network_metering_experiment.db',
-  'exp_fedora32_30_2/network_metering_experiment.db',
-  'exp_freebsd_30/network_metering_experiment.db'
-)
 objects.images <- db_interact.get_images()
 objects.services <- db_interact.get_services()
 objects.operations <- c('CREATE', 'SUSPEND', 'RESUME', 'STOP', 'SHELVE')
@@ -122,7 +108,7 @@ objects.build_schema <- function(){
   return(schema)
 }
 
-objects.build_api_calls_df <- function(os_image, operation_list, service_list, exec_id, database=DEFAULT_DATABASE){
+objects.build_api_calls_df <- function(os_image, operation_list, service_list, exec_id, database=params.DEFAULT_DATABASE){
   elements_counter <- 1
   redundant_data <- data.frame(
                     service=vector(length=length(service_list) * length(operation_list)),
@@ -146,7 +132,7 @@ objects.build_api_calls_df <- function(os_image, operation_list, service_list, e
   return(ordered_set)
 }
 
-objects.build_total_traffic <- function(os_image, operation_list, service_list, exec_id, database=DEFAULT_DATABASE){
+objects.build_total_traffic <- function(os_image, operation_list, service_list, exec_id, database=params.DEFAULT_DATABASE){
 
   service_list <- c(service_list, 'MISC')
   elements_counter <- 1

@@ -71,7 +71,7 @@ for(operation in filtered_op){
   theme_bw() +
   ggtitle(title)
   # print(lr.plot)
-  pdf_file <- paste('linear_regression_', operation, '.pdf', sep='')
+  pdf_file <- paste('linear_regression_2', operation, '.pdf', sep='')
   ggsave(filename=pdf_file, plot=lr.plot)
 }
 

@@ -1,18 +1,13 @@
 library(RSQLite)
+source('params.R')
 sqlite <- dbDriver('SQLite')
-
-COMMON_PATH <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/'
-DB_PATH <- 'fedora_bionic_30/network_metering_experiment.db'
-# database <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_1/network_metering_experiment.db'
-# database <- '/media/HDD/UDESC/OpenStack/tests_beta/final_version/exp_2/network_metering_experiment.db'
-DEFAULT_DATABASE <- paste0(COMMON_PATH, DB_PATH)
 
 db_interact.get_excluded_images <- function(db.df, db_list){
   result_db.df <- data.frame()
   for(db in db_list){
-    db_path <- unique(db.df[grep(db, db.df$database),]$database)
-    if(length(db_path) == 0) next
-    db_images <- db_interact.get_images(database=db_path)
+    params.DB_PATH <- unique(db.df[grep(db, db.df$database),]$database)
+    if(length(params.DB_PATH) == 0) next
+    db_images <- db_interact.get_images(database=params.DB_PATH)
     # print(db_images)
     selected_images <- unique(db.df[grep(db, db.df$database),]$image)
     # print(selected_images)
@@ -20,7 +15,7 @@ db_interact.get_excluded_images <- function(db.df, db_list){
     # print(excluded_images)
     if(length(excluded_images) > 0){
       aux_result.df <- data.frame(
-        database = db_path,
+        database = params.DB_PATH,
         excluded_image = excluded_images,
         stringsAsFactors = FALSE
       )
@@ -35,9 +30,9 @@ db_interact.filter_images_by_db <- function(db_list){
   exec_arr <- c()
   db_arr <- c()
   for(db in db_list){
-    db_path <- paste0(COMMON_PATH, db)
-    db_images <- db_interact.get_images(database=db_path)
-    n_exec <- length(db_interact.get_exec_list_by_image(db_images[1], database=db_path))
+    params.DB_PATH <- paste0(params.COMMON_PATH, db)
+    db_images <- db_interact.get_images(database=params.DB_PATH)
+    n_exec <- length(db_interact.get_exec_list_by_image(db_images[1], database=params.DB_PATH))
     new_images <- db_images
     conflict_idx <- match(db_images, all_images)
     conflict_idx <- conflict_idx[!is.na(conflict_idx)]
@@ -45,7 +40,7 @@ db_interact.filter_images_by_db <- function(db_list){
     if(length(conflict_idx) > 0){
       old_n_exec <- exec_arr[c(conflict_idx)][1]
       if(n_exec > old_n_exec){
-        db_arr[c(conflict_idx)] = db_path
+        db_arr[c(conflict_idx)] = params.DB_PATH
         exec_arr[c(conflict_idx)] = n_exec
       }
       conflict_images <- all_images[c(conflict_idx)]
@@ -57,7 +52,7 @@ db_interact.filter_images_by_db <- function(db_list){
 
     all_images <- c(all_images, new_images)
     exec_arr <- c(exec_arr, rep(n_exec, length(new_images)))
-    db_arr <- c(db_arr, rep(db_path, length(new_images)))
+    db_arr <- c(db_arr, rep(params.DB_PATH, length(new_images)))
   }
 
   if(length(db_arr) != length(exec_arr) || length(db_arr) != length(all_images)){
@@ -73,7 +68,7 @@ db_interact.filter_images_by_db <- function(db_list){
   return(db.df)
 }
 
-db_interact.simple_get <- function(query, params=list(), as_vector=FALSE, database=DEFAULT_DATABASE){
+db_interact.simple_get <- function(query, params=list(), as_vector=FALSE, database=params.DEFAULT_DATABASE){
   db_conn <- dbConnect(sqlite, dbname=database)
   on.exit(dbDisconnect(db_conn))
   result_set <- dbSendQuery(db_conn, query)
@@ -91,22 +86,22 @@ db_interact.simple_get <- function(query, params=list(), as_vector=FALSE, databa
 }
 
 #FIXME should create 1 function with parameters to coulmn and table :)
-db_interact.get_services <- function(database=DEFAULT_DATABASE){
+db_interact.get_services <- function(database=params.DEFAULT_DATABASE){
   service_query <- "SELECT service_name FROM Service"
   return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_images <- function(database=DEFAULT_DATABASE){
+db_interact.get_images <- function(database=params.DEFAULT_DATABASE){
   service_query <- "SELECT image_name FROM OsImage"
   return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_nics <- function(database=DEFAULT_DATABASE){
+db_interact.get_nics <- function(database=params.DEFAULT_DATABASE){
   service_query <- "SELECT network_interface FROM Metering GROUP BY network_interface"
   return(db_interact.simple_get(service_query, as_vector=TRUE, database=database))
 }
 
-db_interact.get_exec_list_by_image <- function(image, database=DEFAULT_DATABASE){
+db_interact.get_exec_list_by_image <- function(image, database=params.DEFAULT_DATABASE){
   service_query <- "
         SELECT exec_id FROM Execution exec
           JOIN OsImage img ON exec.image_id = img.image_id
@@ -117,7 +112,7 @@ db_interact.get_exec_list_by_image <- function(image, database=DEFAULT_DATABASE)
 
 #TODO: Refactor
 #TODO Implement exclude image list for database
-db_interact.get_traffic_info <- function(exclude_images=NULL, database=DEFAULT_DATABASE){
+db_interact.get_traffic_info <- function(exclude_images=NULL, database=params.DEFAULT_DATABASE){
   # params <- list(exclude_images = exclude_images)
 
   db_conn <- dbConnect(sqlite, dbname=database)
@@ -158,7 +153,7 @@ db_interact.get_traffic_info <- function(exclude_images=NULL, database=DEFAULT_D
   return(fetch_result)
 }
 
-db_interact.get_service_calls <- function(total=FALSE, database=DEFAULT_DATABASE){
+db_interact.get_service_calls <- function(total=FALSE, database=params.DEFAULT_DATABASE){
 
   select_str <- '
   SELECT sv.service_name as service,
@@ -203,7 +198,7 @@ db_interact.get_service_calls <- function(total=FALSE, database=DEFAULT_DATABASE
 }
 
 
-db_interact.get_service_traffic <- function(total=FALSE, database=DEFAULT_DATABASE){
+db_interact.get_service_traffic <- function(total=FALSE, database=params.DEFAULT_DATABASE){
   db_conn <- dbConnect(sqlite, dbname=database)
   on.exit(dbDisconnect(db_conn))
 
@@ -253,7 +248,7 @@ db_interact.get_service_traffic <- function(total=FALSE, database=DEFAULT_DATABA
 }
 
 #@DEPRECATED
-db_interact.get_api_calls_counter <- function(image_name, operation, execution_id, service='TOTAL', database=DEFAULT_DATABASE){
+db_interact.get_api_calls_counter <- function(image_name, operation, execution_id, service='TOTAL', database=params.DEFAULT_DATABASE){
   params <- list(image_name = image_name,
     operation = operation,
     execution_id = execution_id
@@ -296,7 +291,7 @@ db_interact.get_api_calls_counter <- function(image_name, operation, execution_i
 
 
 #@DEPRECATED
-db_interact.get_total_traffic <- function(image_name, operation, execution_id, service='TOTAL', database=DEFAULT_DATABASE){
+db_interact.get_total_traffic <- function(image_name, operation, execution_id, service='TOTAL', database=params.DEFAULT_DATABASE){
   service_cond <- 'AND sv.service_name = :service'
   params <- list(image_name = image_name,
     operation = operation,

@@ -13,29 +13,6 @@ source('data_handler.R')
 source('boxplot/boxplot_final_v2.R')
 
 ################################################################################
-
-# data_handler.df_names_fix <- function(my_df){
-#   fedora_name_fix <- function(x){
-#     str_replace(x, 'fedora31', 'Fedora 31')
-#   }
-#
-#   ubuntu_name_fix <- function(x){
-#     str_replace(x, 'bionic_ubuntu', 'Ubuntu Bionic Beaver')
-#   }
-#
-#   windows_name_fix <- function(x){
-#     str_replace(x, 'windows_server', 'Windows Server')
-#   }
-#
-#   names_fix <- c(fedora_name_fix, ubuntu_name_fix, windows_name_fix)
-#
-#   for(fix.fn in names_fix){
-#     my_df <- mutate_all(my_df, funs(fix.fn))
-#   }
-#
-#   return(my_df)
-# }
-
 firstup <- function(x) {
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
   x
@@ -49,49 +26,83 @@ shelve.df <- boxplot_data.df[boxplot_data.df$operation == 'SHELVE',]
 
 
 ################### BOXPLOT ####################
-
 ylim_min_value <- min(c(min(log(create.df$traffic + 1)), min(log(shelve.df$traffic + 1))) )
 ylim_max_value <- max(c(max(log(create.df$traffic + 1)), max(log(shelve.df$traffic + 1))) )
-create_plot <- ggplot(create.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
-  geom_boxplot() +
-  ggtitle('CREATE Operation') +
-  ylab("Traffic (log10 +1 scale)") +
-  xlab("OS Image") +
-  ylim(ylim_min_value, ylim_max_value) +
-  theme_bw() +
-  theme(legend.position="none", axis.text.x=element_blank())
-shelve_plot <- ggplot(shelve.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
-  geom_boxplot() +
-  ggtitle('SHELVE Operation') +
-  ylim(ylim_min_value, ylim_max_value) +
-  xlab("OS Image") +
-  theme_bw() +
-  theme(axis.text.y=element_blank(), axis.title.y=element_blank(), axis.text.x=element_blank())
-grid.newpage()
+if (params.LANG == 'PT'){
+  create_plot <- ggplot(create.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('Operação CREATE') +
+    ylab("Tráfego (escala log10 +1)") +
+    xlab("Imagem de SO") +
+    ylim(ylim_min_value, ylim_max_value) +
+    theme_bw() +
+    theme(legend.position="none", axis.text.x=element_blank())
+  shelve_plot <- ggplot(shelve.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('Operação SHELVE') +
+    ylim(ylim_min_value, ylim_max_value) +
+    xlab("Imagem de SO") +
+    theme_bw() +
+    theme(axis.text.y=element_blank(), axis.title.y=element_blank(), axis.text.x=element_blank())
+  grid.newpage()
+} else {
+  create_plot <- ggplot(create.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('CREATE Operation') +
+    ylab("Traffic (log10 +1 scale)") +
+    xlab("OS Image") +
+    ylim(ylim_min_value, ylim_max_value) +
+    theme_bw() +
+    theme(legend.position="none", axis.text.x=element_blank())
+  shelve_plot <- ggplot(shelve.df, aes(x=image, y=log(traffic +1 ), fill=image)) +
+    geom_boxplot() +
+    ggtitle('SHELVE Operation') +
+    ylim(ylim_min_value, ylim_max_value) +
+    xlab("OS Image") +
+    theme_bw() +
+    theme(axis.text.y=element_blank(), axis.title.y=element_blank(), axis.text.x=element_blank())
+  grid.newpage()
+}
 # boxplot_grid_obj <- grid.draw(cbind(ggplotGrob(create_plot), ggplotGrob(shelve_plot), size = "last"))
-ggsave(filename='boxplot_all_obj.pdf', plot=grid.draw(cbind(ggplotGrob(create_plot), ggplotGrob(shelve_plot), size = "last")))
+ggsave(filename=params.BOXPLOT_FILE, plot=grid.draw(cbind(ggplotGrob(create_plot), ggplotGrob(shelve_plot), size = "last")))
 
 ################### ECDF ####################
-
 ylim_min_real <- min(c(min(create.df$traffic), min(shelve.df$traffic)) )
 ylim_max_real <- max(c(max(create.df$traffic), max(shelve.df$traffic)) )
-create_ecdf <- ggplot(create.df, aes(traffic, color=image)) +
-  stat_ecdf(geom = "step") +
-  ggtitle('CREATE Operation') +
-  xlab("Traffic (MB)") +
-  ylab('Cumulative Distribution Function') +
-  theme_bw() +
-  theme(legend.position="none")
-shelve_ecdf <- ggplot(shelve.df, aes(traffic, color=image)) +
-  stat_ecdf(geom = "step") +
-  ggtitle('SHELVE Operation') +
-  xlab("Traffic (MB)") +
-  theme_bw() +
-  theme(axis.text.y=element_blank(), axis.title.y=element_blank())
-grid.newpage()
+if (params.LANG == 'PT'){
+  create_ecdf <- ggplot(create.df, aes(traffic, color=image)) +
+    stat_ecdf(geom = "step") +
+    ggtitle('Operação CREATE') +
+    xlab("Tráfego (MB)") +
+    ylab('Cumulative Distribution Function (CDF)') +
+    theme_bw() +
+    theme(legend.position="none")
+  shelve_ecdf <- ggplot(shelve.df, aes(traffic, color=image)) +
+    stat_ecdf(geom = "step") +
+    ggtitle('Operação SHELVE') +
+    xlab("Tráfego (MB)") +
+    theme_bw() +
+    theme(axis.text.y=element_blank(), axis.title.y=element_blank())
+  grid.newpage()
+} else{
+  create_ecdf <- ggplot(create.df, aes(traffic, color=image)) +
+    stat_ecdf(geom = "step") +
+    ggtitle('CREATE Operation') +
+    xlab("Traffic (MB)") +
+    ylab('Cumulative Distribution Function') +
+    theme_bw() +
+    theme(legend.position="none")
+  shelve_ecdf <- ggplot(shelve.df, aes(traffic, color=image)) +
+    stat_ecdf(geom = "step") +
+    ggtitle('SHELVE Operation') +
+    xlab("Traffic (MB)") +
+    theme_bw() +
+    theme(axis.text.y=element_blank(), axis.title.y=element_blank())
+  grid.newpage()
+}
 # ecdf_grid_obj <- grid.draw(cbind(ggplotGrob(create_ecdf), ggplotGrob(shelve_ecdf), size = "last"))
-ggsave(filename='ecdf_all_obj.pdf', plot=grid.draw(cbind(ggplotGrob(create_ecdf), ggplotGrob(shelve_ecdf), size = "last")))
-
+ggsave(filename=params.ECDF_FILE, plot=grid.draw(cbind(ggplotGrob(create_ecdf), ggplotGrob(shelve_ecdf), size = "last")))
+###############################################
 
 ######################## DATA INFO ############################################
 # exec_id is no longer needed
@@ -119,13 +130,23 @@ aux.tibble <- inner_join(summarised_total_api, summarised_exec_time, by = c('ima
 full_data_info.tibble <- inner_join(summarised_total_traffic, aux.tibble, by = c('image', 'operation'))
 
 fixed_data_info.df <- data_handler.df_names_fix(as.data.frame(full_data_info.tibble))
-data_info.table <- kable(fixed_data_info.df,
-  format="latex",
-  booktabs = T,
-  caption="Data Information",
-  col.names=c('Image', 'Operation', 'Total Traffic - MB (mean +/- sd)',
-              'Total API Calls (mean +/- sd)', 'Execution Time - seconds (mean +/- sd)')) %>%
-kable_styling(latex_options = c("scale_down", "HOLD_position"))
+if (params.LANG == 'PT'){
+  data_info.table <- kable(fixed_data_info.df,
+    format="latex",
+    booktabs = T,
+    caption="Data Information",
+    col.names=c('Imagem', 'Operação', 'Tráfego Total - MB (média +/- sd)',
+                'Chamadas API (média +/- sd)', 'Tempo de Exec. - segundos (média +/- sd)')) %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
+} else {
+  data_info.table <- kable(fixed_data_info.df,
+    format="latex",
+    booktabs = T,
+    caption="Data Information",
+    col.names=c('Image', 'Operation', 'Total Traffic - MB (mean +/- sd)',
+                'Total API Calls (mean +/- sd)', 'Execution Time - seconds (mean +/- sd)')) %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
+}
 print(data_info.table)
 
 ################### BUILDING TABLES ####################
@@ -166,8 +187,26 @@ cast_traffic_data$operation <- as.character(cast_traffic_data$operation)
 
 ################### API AND TRAFFIC TABLES ####################
 
-  cast_api_data <- data_handler.df_names_fix(cast_api_data)
+cast_api_data <- data_handler.df_names_fix(cast_api_data)
 
+if (params.LANG == 'PT'){
+  full_api.table <- kable(cast_api_data,
+      align = 'c',
+      format = 'latex',
+      col.names = firstup(names(cast_api_data)),
+      caption = "Chamadas API / Serviço (média +/- sd)") %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position")) %>%
+  collapse_rows(valign = 'middle')
+
+  cast_traffic_data <- data_handler.df_names_fix(cast_traffic_data)
+  full_traffic.table <- kable(cast_traffic_data,
+      align = 'c',
+      format = 'latex',
+      col.names = firstup(names(cast_traffic_data)),
+      caption = "Volume de Tráfego (MB) / Serviço (média +/- sd)") %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position")) %>%
+  collapse_rows(valign = 'middle')
+} else {
   full_api.table <- kable(cast_api_data,
       align = 'c',
       format = 'latex',
@@ -184,6 +223,7 @@ cast_traffic_data$operation <- as.character(cast_traffic_data$operation)
       caption = "Traffic Volume (MB) / Service (mean +/- sd)") %>%
   kable_styling(latex_options = c("scale_down", "HOLD_position")) %>%
   collapse_rows(valign = 'middle')
+}
 
-  print(full_api.table)
-  print(full_traffic.table)
+print(full_api.table)
+print(full_traffic.table)

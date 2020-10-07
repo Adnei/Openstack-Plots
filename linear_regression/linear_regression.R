@@ -19,10 +19,11 @@ get_image_size <- function(image){
     debian10raw={return(2000)},
     debian10qcow2={return(550)},
     windows_server={return(6600)},
+    freebsd12={return(454)},
     {return(NA)}) #DEFAULT
 }
 
-db.df <- db_interact.filter_images_by_db(objects.db_list)
+db.df <- db_interact.filter_images_by_db(params.db_list)
 db.df <- db.df[db.df$image != 'debian10raw',]
 # lr == 'linear regression
 lr.df <- data.frame(
